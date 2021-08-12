@@ -3,12 +3,14 @@ package com.dws.productservice.repository;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import com.dws.productservice.dto.DtoCategory;
+import com.dws.productservice.exceptionHandling.ApiException;
 
 
 @Repository
@@ -42,7 +44,13 @@ public class RepositoryCategory {
 	}
 	
 	public void updateCategory(DtoCategory categoria, int id) throws Exception{
-
+        try {
+            jdbcTemplate.update("CALL st_update_category(?,?);",categoria.getCategoria(), id);
+        } catch (UncategorizedSQLException e) {
+            int error = Integer.parseInt(e.getSQLException().getSQLState());
+            HttpStatus httpstatus = (error == 50400) ? HttpStatus.BAD_REQUEST : HttpStatus.NOT_FOUND;
+            throw new ApiException(httpstatus, e.getSQLException().getMessage());
+        }
 	}
 	
 	public void deleteRegion(int id) throws Exception{
